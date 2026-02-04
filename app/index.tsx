@@ -10,19 +10,28 @@ import {
   Platform,
   Dimensions,
   KeyboardAvoidingView,
+  ScrollView,
 } from 'react-native';
 import { CameraView, useCameraPermissions, CameraType } from 'expo-camera';
 import * as Location from 'expo-location';
 import * as MediaLibrary from 'expo-media-library';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 
-const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
+interface Photo {
+  id: string;
+  event_title: string;
+  latitude: number | null;
+  longitude: number | null;
+  timestamp: string;
+  resolution: string;
+  base64: string;
+}
+
 export default function CameraScreen() {
-  const router = useRouter();
   const cameraRef = useRef<any>(null);
   
   // Permissions
@@ -36,6 +45,7 @@ export default function CameraScreen() {
   const [facing, setFacing] = useState<CameraType>('back');
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
   const [isLocationEnabled, setIsLocationEnabled] = useState(true);
+  const [photoCount, setPhotoCount] = useState(0);
 
   // Get location on mount
   useEffect(() => {
@@ -46,7 +56,7 @@ export default function CameraScreen() {
     }
   }, [locationPermission?.granted, isLocationEnabled]);
 
-  // Request all permissions on mount
+  // Request all permissions and load photo count
   useEffect(() => {
     (async () => {
       if (!cameraPermission?.granted) {
@@ -58,8 +68,34 @@ export default function CameraScreen() {
       if (!mediaPermission?.granted) {
         await requestMediaPermission();
       }
+      
+      // Load photo count
+      await updatePhotoCount();
     })();
   }, []);
+
+  const updatePhotoCount = async () => {
+    try {
+      const photosJson = await AsyncStorage.getItem('photos');
+      const photos: Photo[] = photosJson ? JSON.parse(photosJson) : [];
+      setPhotoCount(photos.length);
+    } catch (error) {
+      console.error('Error loading photo count:', error);
+    }
+  };
+
+  const savePhotoToStorage = async (photo: Photo) => {
+    try {
+      const photosJson = await AsyncStorage.getItem('photos');
+      const photos: Photo[] = photosJson ? JSON.parse(photosJson) : [];
+      photos.push(photo);
+      await AsyncStorage.setItem('photos', JSON.stringify(photos));
+      await updatePhotoCount();
+    } catch (error) {
+      console.error('Error saving photo:', error);
+      throw error;
+    }
+  };
 
   const handleCapture = async () => {
     if (!cameraRef.current || isCapturing) return;
@@ -87,48 +123,32 @@ export default function CameraScreen() {
         exif: true,
       });
 
-      // Save to gallery
+      // Save to device gallery
       if (mediaPermission?.granted) {
-        const eventSlug = eventTitle || 'GeoPhoto';
-        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-        const filename = `${eventSlug}_${timestamp}`;
-        
         await MediaLibrary.saveToLibraryAsync(photo.uri);
       }
 
-      // Save to backend
-      const photoData = {
+      // Save to local storage
+      const photoData: Photo = {
+        id: Date.now().toString(),
         event_title: eventTitle || 'Untitled Event',
         latitude: currentLocation?.coords.latitude || null,
         longitude: currentLocation?.coords.longitude || null,
-        image_base64: photo.base64 || '',
+        timestamp: new Date().toISOString(),
         resolution: `${photo.width}x${photo.height}`,
+        base64: photo.base64 || '',
       };
 
-      const response = await fetch(`${BACKEND_URL}/api/photos`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(photoData),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to save photo to server');
-      }
+      await savePhotoToStorage(photoData);
 
       // Show success feedback
       Alert.alert(
-        'Photo Captured!',
-        `Event: ${eventTitle || 'Untitled'}\nLocation: ${currentLocation ? 'GPS Tagged' : 'No GPS'}\nSaved to gallery and database`,
+        '✅ Photo Saved!',
+        `Event: ${eventTitle || 'Untitled'}\nLocation: ${currentLocation ? 'GPS Tagged' : 'No GPS'}\nSaved to gallery and local storage\n\nTotal Photos: ${photoCount + 1}`,
         [
           {
-            text: 'View Gallery',
-            onPress: () => router.push('/gallery'),
-          },
-          {
-            text: 'Take Another',
-            style: 'cancel',
+            text: 'OK',
+            style: 'default',
           },
         ]
       );
@@ -147,6 +167,32 @@ export default function CameraScreen() {
     setFacing(current => (current === 'back' ? 'front' : 'back'));
   };
 
+  const clearAllPhotos = async () => {
+    Alert.alert(
+      'Clear All Photos?',
+      'This will remove all photos from local storage. Photos in your gallery will remain.',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Clear',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await AsyncStorage.removeItem('photos');
+              await updatePhotoCount();
+              Alert.alert('Success', 'All photos cleared from storage');
+            } catch (error) {
+              Alert.alert('Error', 'Failed to clear photos');
+            }
+          },
+        },
+      ]
+    );
+  };
+
   // Show permission request UI
   if (!cameraPermission || !locationPermission || !mediaPermission) {
     return (
@@ -162,7 +208,7 @@ export default function CameraScreen() {
         <Ionicons name="camera-outline" size={80} color="#FFD700" />
         <Text style={styles.permissionText}>Camera permission required</Text>
         <Text style={styles.permissionSubtext}>
-          This app needs camera access to capture disaster photos
+          This app needs camera access to capture photos
         </Text>
         <TouchableOpacity style={styles.permissionButton} onPress={requestCameraPermission}>
           <Text style={styles.permissionButtonText}>Grant Camera Access</Text>
@@ -187,13 +233,11 @@ export default function CameraScreen() {
         {/* Top Controls */}
         <View style={styles.topControls}>
           <View style={styles.headerRow}>
-            <Text style={styles.appTitle}>GeoCamera</Text>
-            <TouchableOpacity
-              style={styles.iconButton}
-              onPress={() => router.push('/gallery')}
-            >
-              <Ionicons name="images-outline" size={28} color="#FFF" />
-            </TouchableOpacity>
+            <Text style={styles.appTitle}>PioX Camera</Text>
+            <View style={styles.photoCounter}>
+              <Ionicons name="images-outline" size={20} color="#FFD700" />
+              <Text style={styles.photoCountText}>{photoCount}</Text>
+            </View>
           </View>
           
           {/* Location Status */}
@@ -220,7 +264,7 @@ export default function CameraScreen() {
             <Ionicons name="text-outline" size={20} color="#FFD700" />
             <TextInput
               style={styles.input}
-              placeholder="Event Title (e.g., Building Damage Assessment)"
+              placeholder="Event Title (e.g., Disaster Documentation)"
               placeholderTextColor="#999"
               value={eventTitle}
               onChangeText={setEventTitle}
@@ -262,9 +306,16 @@ export default function CameraScreen() {
           </View>
 
           {/* Info Text */}
-          <Text style={styles.infoText}>
-            Photos saved in HD • GPS {isLocationEnabled ? 'Enabled' : 'Disabled'}
-          </Text>
+          <View style={styles.infoRow}>
+            <Text style={styles.infoText}>
+              HD Quality • GPS {isLocationEnabled ? 'Enabled' : 'Disabled'} • Saved Locally
+            </Text>
+            {photoCount > 0 && (
+              <TouchableOpacity onPress={clearAllPhotos}>
+                <Text style={styles.clearButton}>Clear All</Text>
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
       </CameraView>
     </KeyboardAvoidingView>
@@ -329,13 +380,19 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 4,
   },
-  iconButton: {
-    width: 48,
-    height: 48,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    borderRadius: 24,
+  photoCounter: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    gap: 6,
+  },
+  photoCountText: {
+    color: '#FFD700',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   locationStatus: {
     flexDirection: 'row',
@@ -414,10 +471,19 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#FFF',
   },
+  infoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
   infoText: {
     color: '#FFF',
     fontSize: 12,
-    textAlign: 'center',
     opacity: 0.8,
+  },
+  clearButton: {
+    color: '#FF5252',
+    fontSize: 12,
+    fontWeight: 'bold',
   },
 });
