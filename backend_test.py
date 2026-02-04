@@ -12,7 +12,7 @@ from datetime import datetime
 import os
 
 # Test configuration
-BACKEND_URL = "https://locashot-app.preview.emergentagent.com/api"
+BACKEND_URL = "https://frontend-reorg-4.preview.emergentagent.com/api"
 
 # Test data
 def get_test_image_base64():
