@@ -1,0 +1,84 @@
+diff --git a/backend/server.py b/backend/server.py
+index 1126b4a..e1291b4 100644
+--- a/backend/server.py
++++ b/backend/server.py
+@@ -14,6 +14,13 @@ from datetime import datetime
+ ROOT_DIR = Path(__file__).parent
+ load_dotenv(ROOT_DIR / '.env')
+ 
++# Configure logging first
++logging.basicConfig(
++    level=logging.INFO,
++    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
++)
++logger = logging.getLogger(__name__)
++
+ # MongoDB connection
+ mongo_url = os.environ['MONGO_URL']
+ client = AsyncIOMotorClient(mongo_url)
+@@ -176,13 +183,6 @@ app.add_middleware(
+     allow_headers=["*"],
+ )
+ 
+-# Configure logging
+-logging.basicConfig(
+-    level=logging.INFO,
+-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+-)
+-logger = logging.getLogger(__name__)
+-
+ @app.on_event("shutdown")
+ async def shutdown_db_client():
+     client.close()
+diff --git a/test_result.md b/test_result.md
+index c7ee66d..e59ccfa 100644
+--- a/test_result.md
++++ b/test_result.md
+@@ -131,27 +131,33 @@ backend:
+   
+   - task: "Photo API - Get photo by ID"
+     implemented: true
+-    working: "NA"
++    working: true
+     file: "/app/backend/server.py"
+     stuck_count: 0
+     priority: "medium"
+-    needs_retesting: true
++    needs_retesting: false
+     status_history:
+       - working: "NA"
+         agent: "main"
+         comment: "Implemented GET /api/photos/{photo_id} endpoint to retrieve full photo data including base64 image. Needs testing."
++      - working: true
++        agent: "testing"
++        comment: "✅ TESTED: GET /api/photos/{photo_id} endpoint working correctly. Returns full photo data including base64 image. Properly handles invalid IDs with 404 response. All required fields present in response."
+   
+   - task: "Photo API - Delete photo"
+     implemented: true
+-    working: "NA"
++    working: true
+     file: "/app/backend/server.py"
+     stuck_count: 0
+     priority: "low"
+-    needs_retesting: true
++    needs_retesting: false
+     status_history:
+       - working: "NA"
+         agent: "main"
+         comment: "Implemented DELETE /api/photos/{photo_id} endpoint. Needs testing."
++      - working: true
++        agent: "testing"
++        comment: "✅ TESTED: DELETE /api/photos/{photo_id} endpoint working correctly. Successfully deletes existing photos and returns proper confirmation. Correctly handles non-existent IDs with 404 response. Photo verified as removed from database."
+ 
+ frontend:
+   - task: "Camera screen with HD capture"
+@@ -237,4 +243,6 @@ test_plan:
+ 
+ agent_communication:
+   - agent: "main"
+-    message: "Initial implementation complete. Backend API tested with curl - photo creation and retrieval working. Frontend needs comprehensive testing including camera permissions, GPS tagging, gallery display, and photo detail view. All features implemented and ready for testing."
+\ No newline at end of file
++    message: "Initial implementation complete. Backend API tested with curl - photo creation and retrieval working. Frontend needs comprehensive testing including camera permissions, GPS tagging, gallery display, and photo detail view. All features implemented and ready for testing."
++  - agent: "testing"
++    message: "✅ BACKEND TESTING COMPLETE: All 4 photo API endpoints thoroughly tested and working correctly. Fixed minor logger initialization bug in server.py. Comprehensive test coverage includes: POST /api/photos (with/without GPS, empty titles, special characters), GET /api/photos (with filtering, sorting), GET /api/photos/{id} (valid/invalid IDs), DELETE /api/photos/{id} (existing/non-existent). All endpoints handle edge cases properly with correct HTTP status codes. MongoDB integration working. Backend API ready for production use."
+\ No newline at end of file
