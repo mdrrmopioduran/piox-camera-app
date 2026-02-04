@@ -8,9 +8,7 @@ import {
   Alert,
   ActivityIndicator,
   Platform,
-  Dimensions,
   KeyboardAvoidingView,
-  ScrollView,
 } from 'react-native';
 import { CameraView, useCameraPermissions, CameraType } from 'expo-camera';
 import * as Location from 'expo-location';
@@ -18,8 +16,6 @@ import * as MediaLibrary from 'expo-media-library';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
-
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 interface Photo {
   id: string;
