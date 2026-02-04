@@ -183,7 +183,8 @@ export default function CameraScreen() {
               await AsyncStorage.removeItem('photos');
               await updatePhotoCount();
               Alert.alert('Success', 'All photos cleared from storage');
-            } catch (error) {
+            } catch (err) {
+              console.error('Error clearing photos:', err);
               Alert.alert('Error', 'Failed to clear photos');
             }
           },
