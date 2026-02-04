@@ -146,15 +146,18 @@ backend:
   
   - task: "Photo API - Delete photo"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "low"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Implemented DELETE /api/photos/{photo_id} endpoint. Needs testing."
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: DELETE /api/photos/{photo_id} endpoint working correctly. Successfully deletes existing photos and returns proper confirmation. Correctly handles non-existent IDs with 404 response. Photo verified as removed from database."
 
 frontend:
   - task: "Camera screen with HD capture"
