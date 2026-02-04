@@ -54,7 +54,7 @@ export default function CameraScreen() {
 
   // Request all permissions and load photo count
   useEffect(() => {
-    (async () => {
+    const initializeApp = async () => {
       if (!cameraPermission?.granted) {
         await requestCameraPermission();
       }
@@ -67,7 +67,10 @@ export default function CameraScreen() {
       
       // Load photo count
       await updatePhotoCount();
-    })();
+    };
+    
+    initializeApp();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const updatePhotoCount = async () => {
