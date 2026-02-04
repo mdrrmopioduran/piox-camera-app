@@ -16,6 +16,7 @@
    - Moved all frontend files to `/app/` root directory
    - Updated from `/app/frontend/` to `/app/`
    - Maintained Expo project structure
+   - Created symlink `/app/frontend` -> `/app` for supervisor compatibility
 
 4. **Simplified to Single Page**:
    - Removed gallery screen (`gallery.tsx`)
@@ -33,6 +34,16 @@
    - Updated app name to "PioX Camera App"
    - Updated slug to "piox-camera"
    - Maintained all permissions (Camera, Location, Media Library)
+   - Enabled Hermes JS engine for better performance
+
+7. **Build Optimizations** (Latest):
+   - Installed all dependencies via yarn
+   - Optimized Metro bundler configuration with:
+     - Terser minifier for better compression
+     - Package exports resolution for tree-shaking
+     - Symlink support enabled
+     - File-based caching for faster rebuilds
+   - Added Hermes JS engine in app.json for native performance
 
 ### Current Structure
 
