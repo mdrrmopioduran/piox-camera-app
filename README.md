@@ -1,50 +1,135 @@
-# Welcome to your Expo app 👋
+# PioX Camera App
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A simple, single-page HD camera mobile application with GPS geo-tagging and local storage.
 
-## Get started
+## Features
 
-1. Install dependencies
+- 📸 **HD Quality Photos** - Capture high-definition photos with maximum quality
+- 🗺️ **GPS Geo-Tagging** - Tag photos with precise GPS coordinates (optional)
+- 💾 **Local Storage** - Save photos locally using AsyncStorage
+- 📱 **Native Camera** - Full-screen camera experience using Expo Camera
+- 🎯 **Event Titles** - Add custom event titles to your photos
+- 🔄 **Camera Flip** - Switch between front and back cameras
+- 📊 **Photo Counter** - Track how many photos you've captured
+- 🗑️ **Clear All** - Option to clear all photos from local storage
 
-   ```bash
-   npm install
-   ```
+## Tech Stack
 
-2. Start the app
+- **React Native** - Mobile app framework
+- **Expo** - Development platform and tools
+- **TypeScript** - Type-safe development
+- **AsyncStorage** - Local data persistence
+- **Expo Camera** - Native camera access
+- **Expo Location** - GPS coordinates
+- **Expo Media Library** - Save to device gallery
 
-   ```bash
-   npx expo start
-   ```
+## Project Structure
 
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
+```
+/app/
+├── app/                    # Expo Router app directory
+│   └── index.tsx          # Main camera screen (single page)
+├── assets/                # Images, fonts, and other static assets
+├── node_modules/          # Dependencies
+├── app.json              # Expo configuration
+├── package.json          # Project dependencies
+├── tsconfig.json         # TypeScript configuration
+└── README.md             # This file
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Getting Started
 
-## Learn more
+### Prerequisites
 
-To learn more about developing your project with Expo, look at the following resources:
+- Node.js (v18 or higher)
+- Yarn or npm
+- Expo Go app (for testing on physical device)
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+### Installation
 
-## Join the community
+1. Install dependencies:
+```bash
+yarn install
+```
 
-Join our community of developers creating universal apps.
+2. Start the development server:
+```bash
+yarn start
+```
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+3. Scan the QR code with:
+   - **iOS**: Camera app
+   - **Android**: Expo Go app
+
+## Usage
+
+1. **Grant Permissions**: Allow camera, location, and media library access
+2. **Enter Event Title**: Type a title for your photo (optional)
+3. **Capture Photo**: Tap the large circular button to take a photo
+4. **Toggle GPS**: Use the location button to enable/disable GPS tagging
+5. **Flip Camera**: Switch between front and back cameras
+6. **View Count**: See total photos saved in the top-right corner
+7. **Clear All**: Remove all photos from local storage (gallery photos remain)
+
+## Data Storage
+
+Photos are stored using AsyncStorage with the following structure:
+
+```typescript
+interface Photo {
+  id: string;
+  event_title: string;
+  latitude: number | null;
+  longitude: number | null;
+  timestamp: string;
+  resolution: string;
+  base64: string;
+}
+```
+
+Photos are also automatically saved to your device's camera roll/gallery.
+
+## Permissions
+
+The app requires the following permissions:
+
+- **Camera**: To capture photos
+- **Location**: To tag photos with GPS coordinates
+- **Media Library**: To save photos to device gallery
+
+## Development
+
+### Available Scripts
+
+- `yarn start` - Start Expo development server
+- `yarn android` - Open on Android emulator/device
+- `yarn ios` - Open on iOS simulator/device
+- `yarn web` - Open in web browser (limited functionality)
+- `yarn lint` - Run ESLint
+
+### Build for Production
+
+To create a production build:
+
+```bash
+# For Android
+expo build:android
+
+# For iOS
+expo build:ios
+```
+
+## Notes
+
+- This is a **client-side only** application with no backend
+- All data is stored locally on the device
+- Photos in base64 format may consume significant storage
+- Clearing app data will remove all stored photos (gallery photos are safe)
+
+## License
+
+MIT License - Feel free to use this project for your own purposes.
+
+## Version
+
+1.0.0 - Initial Release
