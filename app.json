@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "GeoCamera - Disaster Response",
-    "slug": "geocamera",
+    "name": "PioX Camera App",
+    "slug": "piox-camera",
     "version": "1.0.0",
     "orientation": "default",
     "icon": "./assets/images/icon.png",
